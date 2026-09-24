@@ -2,15 +2,33 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Hendy Vietsub Pro</title>
-    <meta name="description" content="AutoSub SaaS & Vietsub Studio Pro - AI subtitle generator and video subtitle editor." />
+    <meta name="description" content="AutoSub SaaS & Vietsub Studio Pro - AI subtitle generator, cinema translation, and multi-track video editor." />
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HendyStudio" />
+    <meta name="application-name" content="Hendy Vietsub Pro" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- OpenGraph & Social Cards -->
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="Hendy Vietsub Pro" />
-    <meta property="og:description" content="AutoSub SaaS & Vietsub Studio Pro - AI subtitle generator and video subtitle editor." />
-    <!-- Tải SubtitlesOctopus trực tiếp qua CDN -->
+    <meta property="og:description" content="AutoSub SaaS & Vietsub Studio Pro - AI subtitle generator, cinema translation, and multi-track video editor." />
+    <meta property="og:image" content="/pwa-512x512.png" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- SubtitlesOctopus CDN -->
     <script src="https://cdn.jsdelivr.net/npm/subtitles-octopus@0.1.3/subtitles-octopus.default.js"></script>
   </head>
-  <body class="bg-[#0a0a0a] text-gray-200">
+  <body class="bg-[#0a0a0a] text-gray-200 antialiased overflow-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*"
+  ],
+  "exclude": [
+    "/static/*",
+    "/assets/*",
+    "/favicon.ico",
+    "/icon.svg",
+    "/pwa-*.png",
+    "/apple-touch-icon.png",
+    "/manifest.webmanifest",
+    "/sw.js",
+    "/bookmarklet-overlay.js"
+  ]
+}

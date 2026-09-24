@@ -9,3 +9,117 @@ html, body, #root {
   background-color: #0a0a0a;
   color: #e2e8f0;
 }
+
+/* Container tổng thể ôm trọn ứng dụng */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: #121212; /* Màu nền tối tương đồng với app */
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Thuộc tính chung cho cả 2 thanh bên ẩn/hiện */
+.collapsible-sidebar {
+  width: 60px; /* Chiều rộng thanh mỏng mặc định */
+  height: 100%;
+  background-color: #1a1a1a;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* Hiệu ứng bung ra mượt mà */
+  overflow: hidden;
+  z-index: 100;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Phân biệt đường viền trái và phải */
+.sidebar-left {
+  border-right: 1px solid #2d2d2d;
+}
+.sidebar-right {
+  border-left: 1px solid #2d2d2d;
+}
+
+/* KHI DI CHUỘT VÀO: Thanh bên tự động bung rộng */
+.collapsible-sidebar:hover {
+  width: 240px; 
+}
+
+/* Bố cục bên trong thanh bên */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 15px 0;
+  box-sizing: border-box;
+}
+
+/* Từng dòng tính năng */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  width: 240px; /* Giữ cố định để text không bị xuống dòng khi co giãn */
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  text-align: left;
+}
+
+.sidebar-item:hover {
+  background-color: #2a2a2a;
+  color: #4facfe; /* Đổi màu chữ/icon sang màu xanh tạo điểm nhấn */
+}
+
+.sidebar-item.active {
+  background-color: rgba(79, 172, 254, 0.15);
+  color: #4facfe;
+  border-left: 3px solid #4facfe;
+}
+
+/* Định dạng cho Icon */
+.sb-icon {
+  font-size: 20px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+/* Định dạng cho chữ - Ẩn hiện mượt mà đồng bộ với chiều rộng */
+.sb-text {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.collapsible-sidebar:hover .sb-text {
+  opacity: 1;
+}
+
+/* Đẩy nút cài đặt ứng dụng xuống góc dưới cùng bên trái */
+.setup-app {
+  margin-top: auto;
+}
+
+/* Vùng nội dung chính ở giữa tự động co giãn theo thanh bên */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f0f0f;
+  transition: all 0.25s ease;
+  overflow: hidden;
+  height: 100%;
+  min-width: 0;
+}

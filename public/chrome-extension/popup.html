@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Hendy Vietsub Pro</title>
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 14px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-weight: 800;
+      font-size: 14px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge {
+      font-size: 10px;
+      background: #0369a1;
+      color: #e0f2fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #334155;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: white;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      outline: none;
+    }
+    input:focus, textarea:focus {
+      border-color: #38bdf8;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+      margin-top: 6px;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+    .result-box {
+      background: #0f172a;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+      color: #38bdf8;
+      min-height: 28px;
+      word-break: break-word;
+      border: 1px dashed #334155;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+    }
+    .footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <span>🎬 Hendy Vietsub Pro</span>
+    </div>
+    <span class="status-badge" id="videoStatus">Đang quét video...</span>
+  </div>
+
+  <!-- Direct Audio Recognition Section -->
+  <div class="card">
+    <div class="card-title">🎙️ Nhận Diện Âm Thanh Trực Tiếp</div>
+    <button class="btn" id="btnAudioToggle">
+      <span id="audioBtnText">Bật Nhận Diện Âm Thanh Video</span>
+    </button>
+    <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
+      Tự động nhận diện giọng nói từ video đang phát trên tab và dịch ra phụ đề tiếng Việt trực tiếp.
+    </div>
+  </div>
+
+  <!-- Direct Text Translation Section -->
+  <div class="card">
+    <div class="card-title">⚡ Dịch Trực Tiếp (Direct Translate)</div>
+    <input type="text" id="inputDirect" placeholder="Nhập câu tiếng Anh hoặc nước ngoài...">
+    <button class="btn btn-secondary" id="btnTranslateDirect">Dịch Sang Tiếng Việt Điện Ảnh</button>
+    <div style="margin-top: 8px;">
+      <div class="result-box" id="outputDirect">Bản dịch sẽ hiển thị ở đây...</div>
+    </div>
+  </div>
+
+  <!-- Studio Link -->
+  <div class="footer">
+    <a href="https://ais-dev-wrkuwchwu7ib2lcihbs633-46010407900.asia-southeast1.run.app" target="_blank">
+      🚀 Mở Hendy Vietsub Studio Pro Đầy Đủ
+    </a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

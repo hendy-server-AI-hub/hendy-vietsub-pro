@@ -1,6 +1,9 @@
 {
   "name": "Hendy Vietsub Pro",
   "description": "AutoSub SaaS & Vietsub Studio Pro - AI subtitle generator and video subtitle editor.",
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
   "capabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

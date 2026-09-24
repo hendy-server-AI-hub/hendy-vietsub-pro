@@ -1,0 +1,16 @@
+name = "hendy-vietsub-pro"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+[vars]
+NODE_ENV = "production"
+
+# Cloudflare Workers AI Binding (Melotts-v1 & whisper)
+[ai]
+binding = "AI"
+
+# Optional Cloudflare KV binding for subtitle project storage
+# [[kv_namespaces]]
+# binding = "PROJECT_CACHE"
+# id = "your-kv-namespace-id"
