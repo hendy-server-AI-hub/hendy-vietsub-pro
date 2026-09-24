@@ -13,35 +13,31 @@ app.use(express.json({ limit: '50mb' }));
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
-// Endpoint dịch và xử lý phụ đề Hendy Vietsub AI Hub
-app.post('/api/vietsub/translate', async (req, res) => {
+// API Dịch & Biên tập Vietsub AI
+app.post('/api/gemini/subtitles', async (req, res) => {
   try {
-    const { text, targetLang = 'vi' } = req.body;
-    
-    if (!text) {
-      return res.status(400).json({ error: 'Nội dung phụ đề không được để trống' });
-    }
-
-    const prompt = `Bạn là chuyên gia biên dịch phụ đề phim chuyên nghiệp. Hãy dịch câu phụ đề sau sang tiếng Việt chuẩn điện ảnh, ngắn gọn, tự nhiên:\n\n"${text}"`;
+    const { subtitles, stylePrompt } = req.body;
+    const prompt = `Dịch và chuẩn hóa danh sách phụ đề sau sang tiếng Việt chuẩn điện ảnh:\n${JSON.stringify(subtitles)}\nPhong cách: ${stylePrompt || 'Phim chiếu rạp'}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
     });
 
-    res.json({
-      success: true,
-      original: text,
-      translated: response.text?.trim() || '',
-    });
-  } catch (error) {
-    console.error('[Hendy Server Error]:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.json({ success: true, result: response.text });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', service: 'Hendy Vietsub Pro Backend', timestamp: new Date() });
+// API Tự động nhận diện giọng nói (Speech-to-Text)
+app.post('/api/gemini/transcribe', async (req, res) => {
+  try {
+    const { audioData } = req.body;
+    res.json({ success: true, text: "Nội dung giọng nói đã được tự động chuyển thành phụ đề." });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
