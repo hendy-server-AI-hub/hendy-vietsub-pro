@@ -1,10 +1,9 @@
 name = "hendy-vietsub-pro"
-compatibility_date = "2024-03-01"
+compatibility_date = "2024-09-23"
 
-# Đột phá tính năng: Tự động Serve thư mục build của React Vite
 [assets]
 directory = "./frontend/dist"
-binding = "ASSETS"
+not_found_handling = "single-page-application"
 
 [vars]
 VITE_API_URL = "https://your-backend-api.up.railway.app"
