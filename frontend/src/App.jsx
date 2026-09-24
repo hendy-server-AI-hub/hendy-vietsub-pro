@@ -1,239 +1,174 @@
-import React, { useState, useRef, useEffect } from 'react';
-import WaveSurfer from 'wavesurfer.js';
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import React, { useState, useRef } from 'react';
+import { Play, FileVideo, Mic, Type, Wand2, Download, Settings, Volume2, MonitorPlay } from 'lucide-react';
+import { apiService } from './apiService';
 
 export default function App() {
+  const [activeMenu, setActiveMenu] = useState('phude');
+  const [subtitles, setSubtitles] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
-  const [videoUrl, setVideoUrl] = useState('');
-  const [segments, setSegments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState('');
 
-  const videoRef = useRef(null);
-  const waveformRef = useRef(null);
-  const wavesurfer = useRef(null);
-  const regionsPlugin = useRef(null);
-  const octopusInstance = useRef(null);
-
-  useEffect(() => {
-    if (!waveformRef.current) return;
-
-    regionsPlugin.current = RegionsPlugin.create();
-    wavesurfer.current = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: '#4f46e5',
-      progressColor: '#818cf8',
-      height: 80,
-      plugins: [regionsPlugin.current]
-    });
-
-    wavesurfer.current.on('interaction', () => {
-      if (videoRef.current) {
-        videoRef.current.currentTime = wavesurfer.current.getCurrentTime();
-      }
-    });
-
-    return () => wavesurfer.current?.destroy();
-  }, []);
-
-  const handleVideoUpload = (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    setVideoFile(file);
-    const url = URL.createObjectURL(file);
-    setVideoUrl(url);
-
-    if (wavesurfer.current) {
-      wavesurfer.current.load(url);
+    if (file) {
+      setVideoSrc(URL.createObjectURL(file));
+      setVideoFile(file);
     }
   };
 
-  const handleTranscribe = async () => {
-    if (!videoFile) return alert('Vui lòng chọn video trước!');
-    setLoading(true);
-    setStatusMsg('Whisper AI đang tiến hành bóc tách giọng nói...');
-
-    const formData = new FormData();
-    formData.append('file', videoFile);
-
+  const handleAction = async (actionFn, successMsg) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/transcribe`, { method: 'POST', body: formData });
-      const data = await res.json();
-      setSegments(data.segments || []);
-      updateWaveformRegions(data.segments);
-      initOctopus(data.segments);
-      setStatusMsg('Hoàn tất nhận dạng phụ đề!');
+      setIsProcessing(true);
+      await actionFn();
+      if (successMsg) alert(successMsg);
     } catch (err) {
-      alert('Lỗi khi bóc tách phụ đề: ' + err.message);
+      alert(`Lỗi: ${err.message}`);
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleTranslate = async () => {
-    if (segments.length === 0) return alert('Chưa có phụ đề để dịch!');
-    setLoading(true);
-    setStatusMsg('Đang dịch tự động phụ đề...');
+  const transcribe = () => handleAction(async () => {
+    if (!videoFile) throw new Error("Vui lòng tải video lên trước!");
+    const segments = await apiService.transcribeVideo(videoFile, videoFile.name);
+    setSubtitles(segments);
+  });
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/translate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ segments, target_lang: 'vi' })
-      });
-      const data = await res.json();
-      setSegments(data.segments);
-      initOctopus(data.segments);
-      setStatusMsg('Đã dịch xong phụ đề!');
-    } catch (err) {
-      alert('Lỗi khi dịch: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const translate = () => handleAction(async () => {
+    if (!subtitles.length) throw new Error("Chưa có phụ đề để dịch!");
+    const translated = await apiService.translateSubtitles(subtitles);
+    setSubtitles(translated);
+  });
 
-  const updateWaveformRegions = (segs) => {
-    if (!regionsPlugin.current) return;
-    regionsPlugin.current.clearRegions();
-    segs.forEach((seg) => {
-      regionsPlugin.current.addRegion({
-        id: String(seg.id),
-        start: seg.start,
-        end: seg.end,
-        color: 'rgba(99, 102, 241, 0.3)',
-        drag: true,
-        resize: true
-      });
-    });
-  };
-
-  const initOctopus = (segs) => {
-    const assContent = generateASSContent(segs);
-    if (octopusInstance.current) {
-      octopusInstance.current.free();
-    }
-    if (window.SubtitlesOctopus && videoRef.current) {
-      octopusInstance.current = new window.SubtitlesOctopus({
-        video: videoRef.current,
-        subContent: assContent,
-        workerUrl: 'https://cdn.jsdelivr.net/npm/subtitles-octopus@0.1.3/subtitles-octopus-worker.js'
-      });
-    }
-  };
-
-  const generateASSContent = (segs) => {
-    let ass = `[Script Info]
-Title: AutoSub Export
-ScriptType: v4.00+
-PlayResX: 1920
-PlayResY: 1080
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, BackColour, Bold, Alignment, MarginV
-Style: Default,Arial,36,&H00FFFFFF,&H80000000,1,2,30
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
-
-    segs.forEach((s) => {
-      const startStr = formatASSDate(s.start);
-      const endStr = formatASSDate(s.end);
-      const text = s.translation ? `${s.text}\\N{\\i1}${s.translation}{\\i0}` : s.text;
-      ass += `Dialogue: 0,${startStr},${endStr},Default,,0,0,0,,${text}\n`;
-    });
-    return ass;
-  };
-
-  const formatASSDate = (sec) => {
-    const d = new Date(sec * 1000);
-    return d.toISOString().substring(11, 22).replace('.', ',');
-  };
-
-  const handleHardsub = async () => {
-    if (!videoFile || segments.length === 0) return alert('Cần video và phụ đề để Hardsub!');
-    setLoading(true);
-    setStatusMsg('FFmpeg Worker đang render Hardsub Video...');
-
-    const formData = new FormData();
-    formData.append('video', videoFile);
-    formData.append('ass_content', generateASSContent(segments));
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/hardsub`, { method: 'POST', body: formData });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'hardsubbed_video.mp4';
-      a.click();
-      setStatusMsg('Đã ghép cứng phụ đề thành công!');
-    } catch (err) {
-      alert('Lỗi Hardsub: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const exportVideo = () => handleAction(async () => {
+    if (!videoFile || !subtitles.length) throw new Error("Cần video và phụ đề!");
+    const assContent = `[Script Info]\nScriptType: v4.00+\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n` +
+      subtitles.map(s => `Dialogue: 0,0:00:${s.start.toFixed(2)},0:00:${s.end.toFixed(2)},Default,,0,0,0,,${s.textVi}`).join('\n');
+    await apiService.hardsubVideo(videoFile, assContent);
+  }, "Tải xuống thành công!");
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>🎬 AutoSub Studio Pro - Vietsub SaaS</h1>
-      
-      <div style={{ background: '#1e293b', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-        <input type="file" accept="video/*" onChange={handleVideoUpload} />
-        <button onClick={handleTranscribe} disabled={loading} style={{ margin: '0 10px', padding: '8px 16px', cursor: 'pointer' }}>
-          🤖 Bóc tách AI
-        </button>
-        <button onClick={handleTranslate} disabled={loading} style={{ marginRight: '10px', padding: '8px 16px', cursor: 'pointer' }}>
-          🌐 Dịch phụ đề
-        </button>
-        <button onClick={handleHardsub} disabled={loading} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
-          🔥 Hardsub Video
-        </button>
-        <span style={{ marginLeft: '15px', color: '#38bdf8' }}>{statusMsg}</span>
-      </div>
-
-      <div style={{ position: 'relative', width: '100%', maxHeight: '450px', background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
-        <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', height: '400px' }} />
-      </div>
-
-      <div style={{ marginTop: '20px', background: '#1e293b', padding: '10px', borderRadius: '8px' }}>
-        <h3>Waveform Timeline</h3>
-        <div ref={waveformRef}></div>
-      </div>
-
-      <div style={{ marginTop: '20px', background: '#1e293b', padding: '15px', borderRadius: '8px' }}>
-        <h3>Subtitle Editor (Song Ngữ)</h3>
-        {segments.map((seg, idx) => (
-          <div key={seg.id} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'center' }}>
-            <span style={{ width: '110px', fontSize: '12px', color: '#94a3b8' }}>{seg.start}s - {seg.end}s</span>
-            <input
-              type="text"
-              value={seg.text}
-              onChange={(e) => {
-                const newSegs = [...segments];
-                newSegs[idx].text = e.target.value;
-                setSegments(newSegs);
-                initOctopus(newSegs);
-              }}
-              style={{ flex: 1, padding: '6px' }}
-            />
-            <input
-              type="text"
-              value={seg.translation || ''}
-              placeholder="Bản dịch..."
-              onChange={(e) => {
-                const newSegs = [...segments];
-                newSegs[idx].translation = e.target.value;
-                setSegments(newSegs);
-                initOctopus(newSegs);
-              }}
-              style={{ flex: 1, padding: '6px', background: '#334155', color: '#fff' }}
-            />
+    <div className="flex flex-col h-screen bg-[#111111] text-gray-200 font-sans text-sm">
+      {/* HEADER */}
+      <header className="flex items-center justify-between px-4 py-2 bg-[#181818] border-b border-gray-800">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-blue-600 px-3 py-1 rounded text-white font-bold"><MonitorPlay size={16} /> CapCut Pro</div>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 hover:bg-gray-800 rounded">Trình Dựng Studio</button>
+            <button className="px-3 py-1 hover:bg-gray-800 rounded">Trợ Lý Web Video</button>
           </div>
-        ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={exportVideo} disabled={isProcessing} className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded font-medium text-white">
+            <Download size={16} /> {isProcessing ? 'Đang Xử Lý...' : 'Xuất Video & Sub'}
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN WORKSPACE */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT TOOLBAR */}
+        <div className="w-16 bg-[#181818] border-r border-gray-800 flex flex-col items-center py-4 gap-6">
+          <SidebarIcon icon={<FileVideo />} label="Media" active={activeMenu === 'media'} onClick={() => setActiveMenu('media')} />
+          <SidebarIcon icon={<Volume2 />} label="Sound FX" active={activeMenu === 'sound'} onClick={() => setActiveMenu('sound')} />
+          <SidebarIcon icon={<Mic />} label="Thu âm" active={activeMenu === 'record'} onClick={() => setActiveMenu('record')} />
+          <SidebarIcon icon={<Type />} label="Phụ đề" active={activeMenu === 'phude'} onClick={() => setActiveMenu('phude')} />
+        </div>
+
+        {/* LIBRARY PANEL */}
+        <div className="w-64 bg-[#141414] border-r border-gray-800 p-3 flex flex-col gap-3">
+          <label className="border border-dashed border-gray-600 rounded p-4 text-center cursor-pointer hover:bg-gray-800">
+            <span className="text-gray-400 block mb-1">Tải file từ máy tính</span>
+            <input type="file" className="hidden" accept="video/*" onChange={handleFileUpload} />
+          </label>
+          <div className="text-xs font-semibold text-gray-500 mt-2">VIDEO MẪU</div>
+          <VideoSample title="Tears of Steel" duration="12s" />
+          <VideoSample title="Sintel" duration="52s" />
+        </div>
+
+        {/* PLAYER & TIMELINE */}
+        <div className="flex-1 bg-black flex flex-col">
+          <div className="flex-1 flex items-center justify-center p-4">
+            {videoSrc ? <video src={videoSrc} controls className="max-h-full rounded" /> : <div className="text-gray-600">Preview Player</div>}
+          </div>
+          <div className="h-20 bg-[#181818] border-t border-gray-800 p-2 flex items-center gap-4">
+            <button className="text-blue-500"><Play size={24} /></button>
+            <div className="flex-1 h-8 bg-gray-800 rounded relative">
+               {subtitles.length > 0 && <div className="absolute top-1 bottom-1 left-10 w-24 bg-yellow-600/50 border border-yellow-500 rounded"></div>}
+            </div>
+          </div>
+        </div>
+
+        {/* EDITOR PANEL */}
+        <div className="w-96 bg-[#181818] flex flex-col border-l border-gray-800">
+          <div className="flex bg-[#141414] text-xs">
+            <button className="flex-1 py-2 border-b-2 border-yellow-500 text-yellow-500 font-bold">Vietsub</button>
+            <button className="flex-1 py-2 text-gray-400">Clip</button>
+          </div>
+          
+          <div className="p-3 flex-1 overflow-y-auto flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <button onClick={translate} disabled={isProcessing} className="flex items-center gap-1 bg-gray-800 px-3 py-1.5 rounded text-xs">
+                <Wand2 size={14} className="text-purple-400"/> Dịch AI
+              </button>
+            </div>
+
+            {/* SUBTITLE LIST */}
+            <div className="flex-1 bg-[#111] rounded border border-gray-800 p-2 flex flex-col gap-2">
+              {subtitles.length === 0 ? (
+                <div className="text-center text-gray-500 mt-10 text-xs">Bấm bóc tách để tạo phụ đề.</div>
+              ) : (
+                subtitles.map((sub, idx) => (
+                  <div key={idx} className="bg-[#1a1a1a] p-2 rounded border border-gray-700 flex gap-2">
+                    <div className="text-cyan-600 text-xs font-mono">{idx + 1}</div>
+                    <div className="flex-1 flex flex-col gap-1">
+                      <input type="text" value={sub.textVi} onChange={(e) => {
+                        const newSubs = [...subtitles];
+                        newSubs[idx].textVi = e.target.value;
+                        setSubtitles(newSubs);
+                      }} className="bg-transparent border-none outline-none text-yellow-500 text-sm font-semibold" />
+                      <div className="text-gray-400 text-xs italic">{sub.textOriginal}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* AI TOOLS */}
+            <div className="border-t border-gray-800 pt-3">
+              <h3 className="text-xs font-bold text-gray-400 mb-2 uppercase">Công Cụ AI</h3>
+              <button onClick={transcribe} disabled={isProcessing} className="w-full bg-red-900/30 hover:bg-red-900/50 border border-red-900 p-2 rounded text-left">
+                <div className="text-red-400 font-bold text-xs mb-1">🎙 Chuyển âm thanh thành chữ</div>
+                <div className="text-[10px] text-gray-500 mb-2">Tự động lắng nghe và tạo phụ đề tức thì.</div>
+                <div className="text-center bg-red-600 text-white text-xs py-1 rounded font-bold">
+                  {isProcessing ? 'ĐANG BÓC TÁCH...' : 'Mở Auto-Transcription'}
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SidebarIcon({ icon, label, active, onClick }) {
+  return (
+    <div onClick={onClick} className={`flex flex-col items-center gap-1 cursor-pointer ${active ? 'text-blue-500' : 'text-gray-500 hover:text-gray-300'}`}>
+      {icon} <span className="text-[10px]">{label}</span>
+    </div>
+  );
+}
+
+function VideoSample({ title, duration }) {
+  return (
+    <div className="flex items-center justify-between bg-gray-900 p-2 rounded border border-gray-800 cursor-pointer">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center"><Play size={12} className="text-gray-400"/></div>
+        <div className="flex flex-col"><span className="text-xs">{title}</span><span className="text-[10px] text-gray-500">{duration}</span></div>
+      </div>
+      <Settings size={14} className="text-gray-500"/>
     </div>
   );
 }
