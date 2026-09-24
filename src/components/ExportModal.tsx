@@ -1,20 +1,32 @@
 import React from 'react';
-import { Download, FileText, Film, X } from 'lucide-react';
+import { Download, FileText, Film, X, Code2 } from 'lucide-react';
 import { SubtitleSegment } from '../types/editor';
-import { exportToSRT, downloadFile } from '../utils/subtitleExporter';
+import { exportToSRT, exportToVTT, exportToASS, downloadFile } from '../utils/subtitleExporter';
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
   subtitles: SubtitleSegment[];
+  onHardsub?: () => void;
+  isProcessing?: boolean;
 }
 
-export default function ExportModal({ isOpen, onClose, subtitles }: ExportModalProps) {
+export default function ExportModal({ isOpen, onClose, subtitles, onHardsub, isProcessing }: ExportModalProps) {
   if (!isOpen) return null;
 
   const handleExportSRT = () => {
     const srtContent = exportToSRT(subtitles);
-    downloadFile(srtContent, 'vietsub-capcut-pro.srt', 'text/plain');
+    downloadFile(srtContent, 'vietsub-hendy-pro.srt', 'text/plain');
+  };
+
+  const handleExportVTT = () => {
+    const vttContent = exportToVTT(subtitles);
+    downloadFile(vttContent, 'vietsub-hendy-pro.vtt', 'text/vtt');
+  };
+
+  const handleExportASS = () => {
+    const assContent = exportToASS(subtitles);
+    downloadFile(assContent, 'vietsub-hendy-pro.ass', 'text/plain');
   };
 
   return (
@@ -34,23 +46,63 @@ export default function ExportModal({ isOpen, onClose, subtitles }: ExportModalP
             onClick={handleExportSRT}
             className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-lg border border-slate-700 transition"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-amber-400" />
               <div className="text-left">
                 <div className="text-sm font-medium">Xuất tệp phụ đề (.SRT)</div>
-                <div className="text-xs text-slate-400">Định dạng phụ đề tiêu chuẩn</div>
+                <div className="text-xs text-slate-400">Định dạng phụ đề chuẩn quốc tế</div>
               </div>
             </div>
             <Download className="w-4 h-4 text-slate-400" />
           </button>
 
-          <button className="flex items-center justify-between bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg transition font-medium">
-            <div className="flex items-center gap-2">
-              <Film className="w-5 h-5" />
-              <span>Render MP4 Hardcode Vietsub</span>
+          <button
+            onClick={handleExportVTT}
+            className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-lg border border-slate-700 transition"
+          >
+            <div className="flex items-center gap-3">
+              <Code2 className="w-5 h-5 text-emerald-400" />
+              <div className="text-left">
+                <div className="text-sm font-medium">Xuất tệp WebVTT (.VTT)</div>
+                <div className="text-xs text-slate-400">Dành cho video HTML5 & web streaming</div>
+              </div>
             </div>
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4 text-slate-400" />
           </button>
+
+          <button
+            onClick={handleExportASS}
+            className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-lg border border-slate-700 transition"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-purple-400" />
+              <div className="text-left">
+                <div className="text-sm font-medium">Xuất tệp Aegisub (.ASS)</div>
+                <div className="text-xs text-slate-400">Đầy đủ style, font và hiệu ứng karaoke</div>
+              </div>
+            </div>
+            <Download className="w-4 h-4 text-slate-400" />
+          </button>
+
+          {onHardsub && (
+            <button
+              onClick={() => {
+                onHardsub();
+                onClose();
+              }}
+              disabled={isProcessing}
+              className="flex items-center justify-between bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white p-3 rounded-lg transition font-medium"
+            >
+              <div className="flex items-center gap-3">
+                <Film className="w-5 h-5" />
+                <div className="text-left">
+                  <span>Render MP4 Hardcode Vietsub</span>
+                  <div className="text-xs text-indigo-200 font-normal">Khắc phụ đề cố định vào video</div>
+                </div>
+              </div>
+              <Download className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
