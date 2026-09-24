@@ -2,24 +2,22 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
-    container_name: autosub-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "3001:3001"
     environment:
-      - PORT=8000
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-""}
-    volumes:
-      - ./backend/temp:/app/temp
+      - PORT=3001
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     restart: always
 
   frontend:
-    build: ./frontend
-    container_name: autosub-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
     restart: always
