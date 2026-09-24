@@ -17,7 +17,6 @@ export default function App() {
   const regionsPlugin = useRef(null);
   const octopusInstance = useRef(null);
 
-  // Khởi tạo Wavesurfer.js
   useEffect(() => {
     if (!waveformRef.current) return;
 
@@ -39,7 +38,6 @@ export default function App() {
     return () => wavesurfer.current?.destroy();
   }, []);
 
-  // Tải tệp Video
   const handleVideoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -52,7 +50,6 @@ export default function App() {
     }
   };
 
-  // 1. /api/transcribe - Tự động nhận dạng phụ đề
   const handleTranscribe = async () => {
     if (!videoFile) return alert('Vui lòng chọn video trước!');
     setLoading(true);
@@ -75,7 +72,6 @@ export default function App() {
     }
   };
 
-  // 2. /api/translate - Dịch tự động
   const handleTranslate = async () => {
     if (segments.length === 0) return alert('Chưa có phụ đề để dịch!');
     setLoading(true);
@@ -98,7 +94,6 @@ export default function App() {
     }
   };
 
-  // Cập nhật Waveform Regions
   const updateWaveformRegions = (segs) => {
     if (!regionsPlugin.current) return;
     regionsPlugin.current.clearRegions();
@@ -114,7 +109,6 @@ export default function App() {
     });
   };
 
-  // Khởi tạo SubtitlesOctopus (Live ASS WASM Renderer)
   const initOctopus = (segs) => {
     const assContent = generateASSContent(segs);
     if (octopusInstance.current) {
@@ -129,7 +123,6 @@ export default function App() {
     }
   };
 
-  // Tạo định dạng ASS Subtitle
   const generateASSContent = (segs) => {
     let ass = `[Script Info]
 Title: AutoSub Export
@@ -158,16 +151,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
     return d.toISOString().substring(11, 22).replace('.', ',');
   };
 
-  // Xuất file SRT / ASS tải về trên Client
-  const downloadFile = (content, filename) => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-  };
-
-  // 3. /api/hardsub - Ghép cứng phụ đề
   const handleHardsub = async () => {
     if (!videoFile || segments.length === 0) return alert('Cần video và phụ đề để Hardsub!');
     setLoading(true);
@@ -185,7 +168,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
       a.href = url;
       a.download = 'hardsubbed_video.mp4';
       a.click();
-      setStatusMsg('Đã ghép cứng phụ đề và tải về thành công!');
+      setStatusMsg('Đã ghép cứng phụ đề thành công!');
     } catch (err) {
       alert('Lỗi Hardsub: ' + err.message);
     } finally {
@@ -195,50 +178,36 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>🎬 AutoSub Studio Pro - Fullstack SaaS</h1>
+      <h1>🎬 AutoSub Studio Pro - Vietsub SaaS</h1>
       
-      {/* Upload & Thao tác */}
       <div style={{ background: '#1e293b', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <input type="file" accept="video/*" onChange={handleVideoUpload} />
-        <button onClick={handleTranscribe} disabled={loading} style={{ margin: '0 10px' }}>
+        <button onClick={handleTranscribe} disabled={loading} style={{ margin: '0 10px', padding: '8px 16px', cursor: 'pointer' }}>
           🤖 Bóc tách AI
         </button>
-        <button onClick={handleTranslate} disabled={loading} style={{ marginRight: '10px' }}>
+        <button onClick={handleTranslate} disabled={loading} style={{ marginRight: '10px', padding: '8px 16px', cursor: 'pointer' }}>
           🌐 Dịch phụ đề
         </button>
-        <button onClick={handleHardsub} disabled={loading} style={{ background: '#ef4444', color: '#fff' }}>
-          🔥 Hardsub Video (FFmpeg)
+        <button onClick={handleHardsub} disabled={loading} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+          🔥 Hardsub Video
         </button>
         <span style={{ marginLeft: '15px', color: '#38bdf8' }}>{statusMsg}</span>
       </div>
 
-      {/* Trình phát Video & WASM ASS Overlay */}
       <div style={{ position: 'relative', width: '100%', maxHeight: '450px', background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
         <video ref={videoRef} src={videoUrl} controls style={{ width: '100%', height: '400px' }} />
       </div>
 
-      {/* Sóng âm Wavesurfer */}
       <div style={{ marginTop: '20px', background: '#1e293b', padding: '10px', borderRadius: '8px' }}>
-        <h3>Waveform Editor</h3>
+        <h3>Waveform Timeline</h3>
         <div ref={waveformRef}></div>
       </div>
 
-      {/* Bảng chỉnh sửa phụ đề song ngữ */}
       <div style={{ marginTop: '20px', background: '#1e293b', padding: '15px', borderRadius: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <h3>Dual Subtitle Editor (Song Ngữ)</h3>
-          <div>
-            <button onClick={() => downloadFile(generateASSContent(segments), 'subtitles.ass')} style={{ marginRight: '10px' }}>
-              Tải .ASS
-            </button>
-          </div>
-        </div>
-
+        <h3>Subtitle Editor (Song Ngữ)</h3>
         {segments.map((seg, idx) => (
           <div key={seg.id} style={{ display: 'flex', gap: '10px', marginBottom: '8px', alignItems: 'center' }}>
-            <span style={{ width: '100px', fontSize: '12px', color: '#94a3b8' }}>
-              {seg.start}s - {seg.end}s
-            </span>
+            <span style={{ width: '110px', fontSize: '12px', color: '#94a3b8' }}>{seg.start}s - {seg.end}s</span>
             <input
               type="text"
               value={seg.text}
