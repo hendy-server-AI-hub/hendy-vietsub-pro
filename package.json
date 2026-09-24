@@ -1,8 +1,11 @@
 {
-  "name": "hendy-vietsub-pro-root",
+  "name": "hendy-vietsub-pro",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install && npm run build"
+    "build": "npm --prefix frontend install && npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "wrangler": "^3.100.0"
   }
 }
